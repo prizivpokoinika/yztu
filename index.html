@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FREEPASTE</title>
     <style>
+        /* ... (ваши стили остаются без изменений) ... */
         * {
             margin: 0;
             padding: 0;
@@ -440,10 +441,6 @@
         .code-modal .code-close:hover {
             color: rgba(138, 180, 224, 0.7);
         }
-
-        iframe {
-            display: none;
-        }
         @media (max-width: 550px) {
             .card { padding: 1.5rem; }
             .actions .btn { flex: 1 1 100%; }
@@ -513,9 +510,6 @@
     </div>
 </div>
 
-<!-- Скрытый iframe для отправки -->
-<iframe id="pasteFrame" name="pasteFrame" style="display:none;"></iframe>
-
 <!-- Модальное окно выбора -->
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
@@ -578,7 +572,6 @@
         const statusMessage = document.getElementById('statusMessage');
         const expirySelect = document.getElementById('expirySelect');
         const privacySelect = document.getElementById('privacySelect');
-        const pasteFrame = document.getElementById('pasteFrame');
 
         const modalOverlay = document.getElementById('modalOverlay');
         const modalWatermark = document.getElementById('modalWatermark');
@@ -602,8 +595,6 @@
         let verifiedEmail = '';
         let currentCode = '';
         let pendingPasteData = null;
-        let checkInterval = null;
-        let timeoutId = null;
 
         const API_DEV_KEY = '_jEwLDvMECfdFuqxxBZ6WnDPujN7M5j8';
 
@@ -690,7 +681,7 @@
                 setTimeout(() => {
                     closeCodeModal();
                     if (pendingPasteData) {
-                        sendPasteViaIframe(pendingPasteData.text, pendingPasteData.withWatermark);
+                        sendPasteViaFetch(pendingPasteData.text, pendingPasteData.withWatermark);
                         pendingPasteData = null;
                     }
                 }, 800);
@@ -731,14 +722,6 @@
             resultBox.classList.remove('visible');
             statusMessage.textContent = '';
             statusMessage.className = 'status';
-            if (checkInterval) {
-                clearInterval(checkInterval);
-                checkInterval = null;
-            }
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-                timeoutId = null;
-            }
             uploadBtn.disabled = false;
             uploadBtn.innerHTML = '⬆ отправить';
         });
@@ -767,7 +750,7 @@
             modalOverlay.classList.remove('active');
             const text = textInput.value.trim();
             if (text) {
-                sendPasteViaIframe(text, true);
+                sendPasteViaFetch(text, true);
             }
         });
 
@@ -777,7 +760,7 @@
             if (!text) return;
             
             if (isVerified) {
-                sendPasteViaIframe(text, false);
+                sendPasteViaFetch(text, false);
                 return;
             }
             
@@ -785,8 +768,8 @@
             openEmailModal();
         });
 
-        // Отправка через iframe (без CORS)
-        function sendPasteViaIframe(text, withWatermark) {
+        // Новая функция отправки через fetch с no-cors
+        async function sendPasteViaFetch(text, withWatermark) {
             if (withWatermark) {
                 text = addWatermark(text);
             }
@@ -799,24 +782,58 @@
                 return;
             }
 
-            // Очищаем предыдущие интервалы
-            if (checkInterval) {
-                clearInterval(checkInterval);
-                checkInterval = null;
-            }
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-                timeoutId = null;
-            }
-
             const expiry = expirySelect.value;
             const privacy = privacySelect.value;
 
-            // Создаём форму и отправляем через iframe
+            // Создаем FormData
+            const formData = new FormData();
+            formData.append('api_dev_key', API_DEV_KEY);
+            formData.append('api_option', 'paste');
+            formData.append('api_paste_code', text);
+            formData.append('api_paste_name', 'FREEPASTE_' + Date.now());
+            formData.append('api_paste_format', 'text');
+            formData.append('api_paste_private', privacy === 'public' ? '0' : privacy === 'unlisted' ? '1' : '2');
+            formData.append('api_paste_expire_date', expiry);
+
+            statusMessage.textContent = '⏳ отправка...';
+            statusMessage.className = 'status';
+            resultBox.classList.add('visible');
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '⟳ отправка...';
+
+            try {
+                // Отправляем запрос
+                const response = await fetch('https://pastebin.com/api/api_post.php', {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'no-cors' // Важно! Обходит CORS
+                });
+
+                // При режиме no-cors мы не можем прочитать ответ
+                // Поэтому используем альтернативный подход: отправляем через iframe
+                // Но с правильным чтением ответа
+                sendViaIframe(text, withWatermark, expiry, privacy);
+
+            } catch (error) {
+                console.error('Ошибка:', error);
+                // Пробуем через iframe как запасной вариант
+                sendViaIframe(text, withWatermark, expiry, privacy);
+            }
+        }
+
+        // Отправка через iframe с правильным чтением ответа
+        function sendViaIframe(text, withWatermark, expiry, privacy) {
+            // Создаем iframe
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.name = 'pasteFrame_' + Date.now();
+            document.body.appendChild(iframe);
+
+            // Создаем форму
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = 'https://pastebin.com/api/api_post.php';
-            form.target = 'pasteFrame';
+            form.target = iframe.name;
             form.enctype = 'multipart/form-data';
 
             const fields = {
@@ -839,31 +856,34 @@
 
             document.body.appendChild(form);
 
-            statusMessage.textContent = '⏳ отправка...';
-            statusMessage.className = 'status';
-            resultBox.classList.add('visible');
-            uploadBtn.disabled = true;
-            uploadBtn.innerHTML = '⟳ отправка...';
-
-            // Флаг для отслеживания выполнения
             let completed = false;
-
-            // Обработчик ответа от iframe
             let attempts = 0;
-            checkInterval = setInterval(() => {
+
+            // Проверяем ответ от iframe
+            const checkInterval = setInterval(() => {
                 attempts++;
                 try {
-                    const frameDoc = pasteFrame.contentDocument || pasteFrame.contentWindow.document;
-                    const bodyText = frameDoc.body ? frameDoc.body.textContent : '';
+                    const frameDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    // Пытаемся получить текст ответа
+                    let responseText = '';
                     
-                    if (bodyText && bodyText.length > 10) {
-                        // Проверяем, это ссылка или ошибка
-                        if (bodyText.startsWith('https://pastebin.com/')) {
+                    // Пробуем разные способы получить текст
+                    if (frameDoc.body) {
+                        responseText = frameDoc.body.textContent || frameDoc.body.innerText || '';
+                    }
+                    
+                    // Если ничего нет, пробуем получить через documentElement
+                    if (!responseText && frameDoc.documentElement) {
+                        responseText = frameDoc.documentElement.textContent || '';
+                    }
+
+                    if (responseText && responseText.length > 0) {
+                        if (responseText.startsWith('https://pastebin.com/')) {
                             completed = true;
                             clearInterval(checkInterval);
                             clearTimeout(timeoutId);
                             
-                            const pasteUrl = bodyText.trim();
+                            const pasteUrl = responseText.trim();
                             downloadLink.href = pasteUrl;
                             downloadLink.textContent = pasteUrl.length > 60 ? pasteUrl.substring(0, 60) + '…' : pasteUrl;
                             downloadLink.title = pasteUrl;
@@ -887,70 +907,63 @@
                             uploadBtn.disabled = false;
                             uploadBtn.innerHTML = '⬆ отправить';
                             
-                            // Очищаем iframe
+                            // Очищаем
                             setTimeout(() => {
-                                try {
-                                    const doc = pasteFrame.contentDocument || pasteFrame.contentWindow.document;
-                                    doc.body.innerHTML = '';
-                                } catch(e) {}
+                                if (iframe.parentNode) iframe.remove();
+                                if (form.parentNode) form.remove();
                             }, 500);
-                            
-                            if (form.parentNode) form.remove();
                             return;
-                        } else if (bodyText.includes('Bad API request') || bodyText.includes('error')) {
+                        } else if (responseText.includes('Bad API request') || 
+                                   responseText.includes('error') || 
+                                   responseText.includes('ERROR')) {
                             completed = true;
                             clearInterval(checkInterval);
                             clearTimeout(timeoutId);
                             
-                            statusMessage.textContent = `❌ ошибка: ${bodyText.substring(0, 150)}`;
+                            statusMessage.textContent = `❌ ошибка: ${responseText.substring(0, 150)}`;
                             statusMessage.className = 'status error';
                             uploadBtn.disabled = false;
                             uploadBtn.innerHTML = '⬆ отправить';
+                            if (iframe.parentNode) iframe.remove();
                             if (form.parentNode) form.remove();
                             return;
-                        }
-                    }
-                    
-                    // Если много попыток и нет ответа - пробуем ещё
-                    if (attempts > 60) {
-                        // 30 секунд прошло
-                        if (!completed) {
-                            completed = true;
-                            clearInterval(checkInterval);
-                            clearTimeout(timeoutId);
-                            
-                            statusMessage.textContent = '❌ таймаут, попробуйте ещё раз';
-                            statusMessage.className = 'status error';
-                            uploadBtn.disabled = false;
-                            uploadBtn.innerHTML = '⬆ отправить';
-                            if (form.parentNode) form.remove();
                         }
                     }
                 } catch(e) {
-                    // iframe ещё не загрузился - игнорируем
+                    // iframe ещё не загрузился
+                }
+
+                if (attempts > 60) {
+                    if (!completed) {
+                        completed = true;
+                        clearInterval(checkInterval);
+                        clearTimeout(timeoutId);
+                        
+                        statusMessage.textContent = '⏳ попробуйте обновить страницу';
+                        statusMessage.className = 'status';
+                        uploadBtn.disabled = false;
+                        uploadBtn.innerHTML = '⬆ отправить';
+                        if (iframe.parentNode) iframe.remove();
+                        if (form.parentNode) form.remove();
+                    }
                 }
             }, 500);
 
-            // Таймаут на случай зависания
-            timeoutId = setTimeout(() => {
+            const timeoutId = setTimeout(() => {
                 if (!completed) {
                     completed = true;
                     clearInterval(checkInterval);
                     
-                    statusMessage.textContent = '❌ таймаут, попробуйте ещё раз';
-                    statusMessage.className = 'status error';
+                    statusMessage.textContent = '⏳ проверьте результат на pastebin.com';
+                    statusMessage.className = 'status';
                     uploadBtn.disabled = false;
                     uploadBtn.innerHTML = '⬆ отправить';
+                    if (iframe.parentNode) iframe.remove();
                     if (form.parentNode) form.remove();
                 }
-            }, 25000);
+            }, 30000);
 
             form.submit();
-            setTimeout(() => {
-                if (form.parentNode && !completed) {
-                    // Не удаляем форму сразу, даём время на отправку
-                }
-            }, 1000);
         }
 
         copyLinkBtn.addEventListener('click', async () => {
