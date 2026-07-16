@@ -95,38 +95,6 @@
             border-radius: 20px;
             border: 1px solid rgba(26, 58, 90, 0.3);
         }
-        .options {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            margin: 0.8rem 0 1.2rem 0;
-            align-items: center;
-        }
-        .options label {
-            color: rgba(138, 180, 224, 0.7);
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-        }
-        .options select {
-            background: rgba(8, 18, 32, 0.7);
-            border: 1px solid rgba(26, 58, 90, 0.5);
-            border-radius: 40px;
-            padding: 0.3rem 1.2rem;
-            color: #dce8f5;
-            outline: none;
-            font-size: 0.85rem;
-            cursor: pointer;
-            min-width: 100px;
-        }
-        .options select:focus {
-            border-color: #4c9eff;
-        }
-        .options select option {
-            background: #141c28;
-        }
         .actions {
             display: flex;
             gap: 12px;
@@ -251,6 +219,7 @@
             color: #4c9eff;
         }
 
+        /* Модальные окна */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -271,34 +240,34 @@
             background: rgba(18, 28, 40, 0.95);
             border-radius: 32px;
             padding: 2.5rem;
-            max-width: 450px;
+            max-width: 400px;
             width: 90%;
             border: 1px solid rgba(100, 180, 255, 0.1);
             box-shadow: 0 30px 60px rgba(0,0,0,0.8);
         }
         .modal h2 {
             color: #e8f0fa;
-            font-size: 1.3rem;
-            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
             text-align: center;
+            margin-bottom: 0.5rem;
         }
         .modal p {
-            color: rgba(138, 180, 224, 0.7);
-            font-size: 0.9rem;
+            color: rgba(138, 180, 224, 0.6);
+            font-size: 0.85rem;
             text-align: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.2rem;
         }
         .modal .modal-buttons {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
         .modal .modal-btn {
-            padding: 0.9rem;
+            padding: 0.8rem;
             border: none;
             border-radius: 60px;
             font-weight: 500;
-            font-size: 1rem;
+            font-size: 0.95rem;
             cursor: pointer;
             transition: 0.15s;
             display: flex;
@@ -306,20 +275,20 @@
             justify-content: center;
             gap: 10px;
         }
-        .modal .modal-btn.watermark {
+        .modal .modal-btn.primary {
             background: linear-gradient(135deg, #1a6bc4, #4c9eff);
             color: white;
             border: 1px solid #3a8aff;
         }
-        .modal .modal-btn.watermark:hover {
+        .modal .modal-btn.primary:hover {
             transform: scale(0.97);
         }
-        .modal .modal-btn.nowatermark {
+        .modal .modal-btn.secondary {
             background: rgba(30, 60, 100, 0.3);
             color: #b0cef0;
             border: 1px solid rgba(26, 58, 90, 0.5);
         }
-        .modal .modal-btn.nowatermark:hover {
+        .modal .modal-btn.secondary:hover {
             background: rgba(40, 80, 140, 0.3);
             border-color: #4c9eff;
         }
@@ -329,7 +298,7 @@
             transform: none;
         }
         .modal .modal-close {
-            margin-top: 12px;
+            margin-top: 10px;
             background: transparent;
             border: none;
             color: rgba(138, 180, 224, 0.4);
@@ -342,7 +311,7 @@
         .modal .modal-close:hover {
             color: rgba(138, 180, 224, 0.7);
         }
-        .modal .watermark-info {
+        .modal .modal-info {
             font-size: 0.75rem;
             color: rgba(106, 138, 170, 0.5);
             text-align: center;
@@ -443,7 +412,6 @@
         @media (max-width: 550px) {
             .card { padding: 1.5rem; }
             .actions .btn { flex: 1 1 100%; }
-            .options { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
@@ -458,31 +426,6 @@
         <div class="textarea-wrap">
             <textarea id="textInput" placeholder="напиши текст"></textarea>
             <span class="counter" id="charCounter">0</span>
-        </div>
-
-        <div class="options">
-            <label>
-                ⏱ срок:
-                <select id="expirySelect">
-                    <option value="10M">10 мин</option>
-                    <option value="1H">1 час</option>
-                    <option value="1D" selected>1 день</option>
-                    <option value="1W">1 неделя</option>
-                    <option value="2W">2 недели</option>
-                    <option value="1M">1 месяц</option>
-                    <option value="6M">6 мес</option>
-                    <option value="1Y">1 год</option>
-                    <option value="N">навсегда</option>
-                </select>
-            </label>
-            <label>
-                🔒 доступ:
-                <select id="privacySelect">
-                    <option value="public">всем</option>
-                    <option value="unlisted">по ссылке</option>
-                    <option value="private">только я</option>
-                </select>
-            </label>
         </div>
 
         <div class="actions">
@@ -509,30 +452,29 @@
     </div>
 </div>
 
-<!-- Модальное окно выбора -->
+<!-- Модальное окно выбора способа отправки -->
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
         <h2>📤 отправить текст</h2>
-        <p>выберите способ отправки</p>
+        <p>выберите способ</p>
         <div class="modal-buttons">
-            <button class="modal-btn watermark" id="modalWatermark">
+            <button class="modal-btn primary" id="modalWithWatermark">
                 📄 с водяным знаком
-                <span style="font-size:0.7rem;opacity:0.7;">(бесплатно)</span>
             </button>
-            <button class="modal-btn nowatermark" id="modalNoWatermark">
+            <button class="modal-btn secondary" id="modalWithoutWatermark">
                 🧼 без водяного знака
                 <span style="font-size:0.7rem;opacity:0.7;">(подтвердите email)</span>
             </button>
         </div>
         <button class="modal-close" id="modalClose">отмена</button>
-        <div class="watermark-info" id="watermarkInfo">✉️ нужен email для подтверждения</div>
+        <div class="modal-info" id="modalInfo">✉️ для отправки без водяного знака нужен email</div>
     </div>
 </div>
 
 <!-- Модальное окно для ввода email -->
 <div class="code-modal-overlay" id="emailModalOverlay">
     <div class="code-modal">
-        <h2>✉️ подтверждение email</h2>
+        <h2>✉️ подтверждение</h2>
         <p>введите email для получения кода</p>
         <div class="code-input-group" style="flex-direction:column; align-items:stretch;">
             <input type="email" id="emailInput" placeholder="ваш email" style="width:100%;">
@@ -569,14 +511,12 @@
         const downloadLink = document.getElementById('downloadLink');
         const copyLinkBtn = document.getElementById('copyLinkBtn');
         const statusMessage = document.getElementById('statusMessage');
-        const expirySelect = document.getElementById('expirySelect');
-        const privacySelect = document.getElementById('privacySelect');
 
         const modalOverlay = document.getElementById('modalOverlay');
-        const modalWatermark = document.getElementById('modalWatermark');
-        const modalNoWatermark = document.getElementById('modalNoWatermark');
+        const modalWithWatermark = document.getElementById('modalWithWatermark');
+        const modalWithoutWatermark = document.getElementById('modalWithoutWatermark');
         const modalClose = document.getElementById('modalClose');
-        const watermarkInfo = document.getElementById('watermarkInfo');
+        const modalInfo = document.getElementById('modalInfo');
 
         const emailModalOverlay = document.getElementById('emailModalOverlay');
         const emailInput = document.getElementById('emailInput');
@@ -591,12 +531,11 @@
         const codeClose = document.getElementById('codeClose');
 
         let isVerified = false;
-        let verifiedEmail = '';
         let currentCode = '';
-        let pendingPasteData = null;
+        let pendingText = '';
+        let pendingWithWatermark = true;
 
         const API_DEV_KEY = '_jEwLDvMECfdFuqxxBZ6WnDPujN7M5j8';
-        const API_URL = 'https://pastebin.com/api/api_post.php';
 
         function generateCode() {
             return Math.floor(100000 + Math.random() * 900000).toString();
@@ -605,10 +544,9 @@
         function sendCodeViaMailto(email) {
             currentCode = generateCode();
             const subject = 'Код подтверждения FREEPASTE';
-            const body = `Ваш код подтверждения: ${currentCode}\n\nВведите его на сайте.\n\nЭто письмо отправлено автоматически.`;
+            const body = `Ваш код подтверждения: ${currentCode}\n\nВведите его на сайте.`;
             const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
             window.open(mailtoLink, '_blank');
-            
             emailStatus.textContent = '✉️ письмо отправлено, проверьте почту';
             emailStatus.style.color = '#0f8a4a';
             return true;
@@ -638,6 +576,11 @@
             codeModalOverlay.classList.remove('active');
         }
 
+        function addWatermark(text) {
+            const watermark = '\n\n---\n📄 отправлено через FREEPASTE';
+            return text + watermark;
+        }
+
         emailSendBtn.addEventListener('click', () => {
             const email = emailInput.value.trim();
             if (!email || !email.includes('@')) {
@@ -645,17 +588,13 @@
                 emailStatus.style.color = '#f0a0a0';
                 return;
             }
-
             sendCodeViaMailto(email);
-            verifiedEmail = email;
             closeEmailModal();
             openCodeModal();
         });
 
         emailInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                emailSendBtn.click();
-            }
+            if (e.key === 'Enter') emailSendBtn.click();
         });
 
         emailCloseBtn.addEventListener('click', closeEmailModal);
@@ -672,24 +611,16 @@
             }
             if (enteredCode === currentCode) {
                 isVerified = true;
-                codeStatus.textContent = '✅ email подтверждён!';
+                codeStatus.textContent = '✅ подтверждён!';
                 codeStatus.style.color = '#0f8a4a';
-                watermarkInfo.textContent = '✅ email подтверждён · доступно';
-                watermarkInfo.style.color = '#0f8a4a';
-                modalNoWatermark.disabled = false;
-                modalNoWatermark.style.opacity = '1';
+                modalInfo.textContent = '✅ email подтверждён';
+                modalInfo.style.color = '#0f8a4a';
                 setTimeout(() => {
                     closeCodeModal();
-                    if (pendingPasteData) {
-                        sendPaste(pendingPasteData.text, pendingPasteData.withWatermark);
-                        pendingPasteData = null;
-                    }
-                }, 800);
-                statusMessage.textContent = '✅ email подтверждён!';
-                statusMessage.className = 'status success';
-                resultBox.classList.add('visible');
+                    sendPaste(pendingText, false);
+                }, 600);
             } else {
-                codeStatus.textContent = '❌ неверный код, попробуйте ещё раз';
+                codeStatus.textContent = '❌ неверный код';
                 codeStatus.style.color = '#f0a0a0';
                 codeInput.value = '';
                 codeInput.focus();
@@ -697,20 +628,13 @@
         });
 
         codeInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                codeConfirmBtn.click();
-            }
+            if (e.key === 'Enter') codeConfirmBtn.click();
         });
 
         codeClose.addEventListener('click', closeCodeModal);
         codeModalOverlay.addEventListener('click', (e) => {
             if (e.target === codeModalOverlay) closeCodeModal();
         });
-
-        function addWatermark(text) {
-            const watermark = '\n\n---\n📄 отправлено через FREEPASTE';
-            return text + watermark;
-        }
 
         textInput.addEventListener('input', () => {
             charCounter.textContent = textInput.value.length;
@@ -741,38 +665,29 @@
             modalOverlay.classList.remove('active');
         });
         modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) {
-                modalOverlay.classList.remove('active');
-            }
+            if (e.target === modalOverlay) modalOverlay.classList.remove('active');
         });
 
-        modalWatermark.addEventListener('click', () => {
+        modalWithWatermark.addEventListener('click', () => {
             modalOverlay.classList.remove('active');
             const text = textInput.value.trim();
-            if (text) {
-                sendPaste(text, true);
-            }
+            if (text) sendPaste(text, true);
         });
 
-        modalNoWatermark.addEventListener('click', () => {
+        modalWithoutWatermark.addEventListener('click', () => {
             modalOverlay.classList.remove('active');
             const text = textInput.value.trim();
             if (!text) return;
-            
             if (isVerified) {
                 sendPaste(text, false);
                 return;
             }
-            
-            pendingPasteData = { text: text, withWatermark: false };
+            pendingText = text;
             openEmailModal();
         });
 
-        // ОСНОВНАЯ ФУНКЦИЯ ОТПРАВКИ - ЧЕРЕЗ ПРОКСИ ДЛЯ ПОЛУЧЕНИЯ ОТВЕТА
         async function sendPaste(text, withWatermark) {
-            if (withWatermark) {
-                text = addWatermark(text);
-            }
+            if (withWatermark) text = addWatermark(text);
 
             const textSize = new Blob([text]).size;
             if (textSize > 100 * 1024) {
@@ -782,8 +697,14 @@
                 return;
             }
 
-            const expiry = expirySelect.value;
-            const privacy = privacySelect.value;
+            const formData = new FormData();
+            formData.append('api_dev_key', API_DEV_KEY);
+            formData.append('api_option', 'paste');
+            formData.append('api_paste_code', text);
+            formData.append('api_paste_name', 'FREEPASTE_' + Date.now());
+            formData.append('api_paste_format', 'text');
+            formData.append('api_paste_private', '0');
+            formData.append('api_paste_expire_date', '1D');
 
             statusMessage.textContent = '⏳ отправка...';
             statusMessage.className = 'status';
@@ -792,197 +713,131 @@
             uploadBtn.innerHTML = '⟳ отправка...';
 
             try {
-                // Отправляем через прокси для получения ответа
-                const formData = new FormData();
-                formData.append('api_dev_key', API_DEV_KEY);
-                formData.append('api_option', 'paste');
-                formData.append('api_paste_code', text);
-                formData.append('api_paste_name', 'FREEPASTE_' + Date.now());
-                formData.append('api_paste_format', 'text');
-                formData.append('api_paste_private', privacy === 'public' ? '0' : privacy === 'unlisted' ? '1' : '2');
-                formData.append('api_paste_expire_date', expiry);
-
-                // Используем бесплатный CORS-прокси для получения ответа
-                const proxyUrl = 'https://corsproxy.io/?';
-                const response = await fetch(proxyUrl + encodeURIComponent(API_URL), {
+                const response = await fetch('https://pastebin.com/api/api_post.php', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    mode: 'no-cors'
                 });
 
-                const responseText = await response.text();
+                // Используем iframe как fallback
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.name = 'pasteFrame_' + Date.now();
+                document.body.appendChild(iframe);
 
-                if (responseText.startsWith('https://pastebin.com/')) {
-                    const pasteUrl = responseText.trim();
-                    downloadLink.href = pasteUrl;
-                    downloadLink.textContent = pasteUrl.length > 60 ? pasteUrl.substring(0, 60) + '…' : pasteUrl;
-                    downloadLink.title = pasteUrl;
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'https://pastebin.com/api/api_post.php';
+                form.target = iframe.name;
+                form.enctype = 'multipart/form-data';
 
-                    const expiryLabels = {
-                        '10M': '10 минут',
-                        '1H': '1 час',
-                        '1D': '1 день',
-                        '1W': '1 неделю',
-                        '2W': '2 недели',
-                        '1M': '1 месяц',
-                        '6M': '6 месяцев',
-                        '1Y': '1 год',
-                        'N': 'навсегда'
-                    };
-                    const watermarkStatus = withWatermark ? 'с водяным знаком' : 'без водяного знака ✅';
-                    statusMessage.textContent = `✅ готово! (${expiryLabels[expiry] || expiry}, ${watermarkStatus})`;
-                    statusMessage.className = 'status success';
-                    resultBox.classList.add('visible');
-                } else {
-                    throw new Error(responseText || 'ошибка API');
+                const fields = {
+                    'api_dev_key': API_DEV_KEY,
+                    'api_option': 'paste',
+                    'api_paste_code': text,
+                    'api_paste_name': 'FREEPASTE_' + Date.now(),
+                    'api_paste_format': 'text',
+                    'api_paste_private': '0',
+                    'api_paste_expire_date': '1D'
+                };
+
+                for (const [key, value] of Object.entries(fields)) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = value;
+                    form.appendChild(input);
                 }
 
-            } catch (error) {
-                console.error('Ошибка:', error);
-                // Если прокси не сработал, пробуем через iframe
-                sendViaIframe(text, withWatermark);
-            } finally {
-                uploadBtn.disabled = false;
-                uploadBtn.innerHTML = '⬆ отправить';
-            }
-        }
+                document.body.appendChild(form);
 
-        // Запасной вариант через iframe
-        function sendViaIframe(text, withWatermark) {
-            const expiry = expirySelect.value;
-            const privacy = privacySelect.value;
+                let completed = false;
+                let attempts = 0;
 
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.name = 'pasteFrame_' + Date.now();
-            document.body.appendChild(iframe);
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    try {
+                        const frameDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        let responseText = '';
+                        if (frameDoc.body) {
+                            responseText = frameDoc.body.textContent || frameDoc.body.innerText || '';
+                        }
+                        if (!responseText && frameDoc.documentElement) {
+                            responseText = frameDoc.documentElement.textContent || '';
+                        }
 
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = API_URL;
-            form.target = iframe.name;
-            form.enctype = 'multipart/form-data';
-
-            const fields = {
-                'api_dev_key': API_DEV_KEY,
-                'api_option': 'paste',
-                'api_paste_code': text,
-                'api_paste_name': 'FREEPASTE_' + Date.now(),
-                'api_paste_format': 'text',
-                'api_paste_private': privacy === 'public' ? '0' : privacy === 'unlisted' ? '1' : '2',
-                'api_paste_expire_date': expiry
-            };
-
-            for (const [key, value] of Object.entries(fields)) {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = key;
-                input.value = value;
-                form.appendChild(input);
-            }
-
-            document.body.appendChild(form);
-
-            let completed = false;
-            let attempts = 0;
-
-            const checkInterval = setInterval(() => {
-                attempts++;
-                try {
-                    const frameDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    let responseText = '';
-                    
-                    if (frameDoc.body) {
-                        responseText = frameDoc.body.textContent || frameDoc.body.innerText || '';
-                    }
-                    
-                    if (!responseText && frameDoc.documentElement) {
-                        responseText = frameDoc.documentElement.textContent || '';
-                    }
-
-                    if (responseText && responseText.length > 0) {
-                        if (responseText.startsWith('https://pastebin.com/')) {
-                            completed = true;
-                            clearInterval(checkInterval);
-                            clearTimeout(timeoutId);
-                            
-                            const pasteUrl = responseText.trim();
-                            downloadLink.href = pasteUrl;
-                            downloadLink.textContent = pasteUrl.length > 60 ? pasteUrl.substring(0, 60) + '…' : pasteUrl;
-                            downloadLink.title = pasteUrl;
-
-                            const expiryLabels = {
-                                '10M': '10 минут',
-                                '1H': '1 час',
-                                '1D': '1 день',
-                                '1W': '1 неделю',
-                                '2W': '2 недели',
-                                '1M': '1 месяц',
-                                '6M': '6 месяцев',
-                                '1Y': '1 год',
-                                'N': 'навсегда'
-                            };
-                            const watermarkStatus = withWatermark ? 'с водяным знаком' : 'без водяного знака ✅';
-                            statusMessage.textContent = `✅ готово! (${expiryLabels[expiry] || expiry}, ${watermarkStatus})`;
-                            statusMessage.className = 'status success';
-                            resultBox.classList.add('visible');
-                            
-                            uploadBtn.disabled = false;
-                            uploadBtn.innerHTML = '⬆ отправить';
-                            
-                            setTimeout(() => {
+                        if (responseText && responseText.length > 0) {
+                            if (responseText.startsWith('https://pastebin.com/')) {
+                                completed = true;
+                                clearInterval(checkInterval);
+                                clearTimeout(timeoutId);
+                                const pasteUrl = responseText.trim();
+                                downloadLink.href = pasteUrl;
+                                downloadLink.textContent = pasteUrl.length > 60 ? pasteUrl.substring(0, 60) + '…' : pasteUrl;
+                                downloadLink.title = pasteUrl;
+                                const wmStatus = withWatermark ? 'с водяным знаком' : 'без водяного знака ✅';
+                                statusMessage.textContent = `✅ готово! (${wmStatus})`;
+                                statusMessage.className = 'status success';
+                                resultBox.classList.add('visible');
+                                uploadBtn.disabled = false;
+                                uploadBtn.innerHTML = '⬆ отправить';
+                                setTimeout(() => {
+                                    if (iframe.parentNode) iframe.remove();
+                                    if (form.parentNode) form.remove();
+                                }, 500);
+                                return;
+                            } else if (responseText.includes('Bad API') || responseText.includes('error')) {
+                                completed = true;
+                                clearInterval(checkInterval);
+                                clearTimeout(timeoutId);
+                                statusMessage.textContent = `❌ ошибка: ${responseText.substring(0, 100)}`;
+                                statusMessage.className = 'status error';
+                                uploadBtn.disabled = false;
+                                uploadBtn.innerHTML = '⬆ отправить';
                                 if (iframe.parentNode) iframe.remove();
                                 if (form.parentNode) form.remove();
-                            }, 500);
-                            return;
-                        } else if (responseText.includes('Bad API request') || 
-                                   responseText.includes('error') || 
-                                   responseText.includes('ERROR')) {
+                                return;
+                            }
+                        }
+                    } catch(e) {}
+
+                    if (attempts > 60) {
+                        if (!completed) {
                             completed = true;
                             clearInterval(checkInterval);
                             clearTimeout(timeoutId);
-                            
-                            statusMessage.textContent = `❌ ошибка: ${responseText.substring(0, 150)}`;
-                            statusMessage.className = 'status error';
+                            statusMessage.textContent = '⏳ проверьте результат на pastebin.com';
+                            statusMessage.className = 'status';
                             uploadBtn.disabled = false;
                             uploadBtn.innerHTML = '⬆ отправить';
                             if (iframe.parentNode) iframe.remove();
                             if (form.parentNode) form.remove();
-                            return;
                         }
                     }
-                } catch(e) {}
+                }, 300);
 
-                if (attempts > 60) {
+                const timeoutId = setTimeout(() => {
                     if (!completed) {
                         completed = true;
                         clearInterval(checkInterval);
-                        clearTimeout(timeoutId);
-                        
-                        statusMessage.textContent = '⏳ попробуйте обновить страницу';
+                        statusMessage.textContent = '⏳ проверьте результат на pastebin.com';
                         statusMessage.className = 'status';
                         uploadBtn.disabled = false;
                         uploadBtn.innerHTML = '⬆ отправить';
                         if (iframe.parentNode) iframe.remove();
                         if (form.parentNode) form.remove();
                     }
-                }
-            }, 300);
+                }, 20000);
 
-            const timeoutId = setTimeout(() => {
-                if (!completed) {
-                    completed = true;
-                    clearInterval(checkInterval);
-                    
-                    statusMessage.textContent = '⏳ попробуйте обновить страницу';
-                    statusMessage.className = 'status';
-                    uploadBtn.disabled = false;
-                    uploadBtn.innerHTML = '⬆ отправить';
-                    if (iframe.parentNode) iframe.remove();
-                    if (form.parentNode) form.remove();
-                }
-            }, 20000);
+                form.submit();
 
-            form.submit();
+            } catch (error) {
+                console.error('Ошибка:', error);
+                statusMessage.textContent = '❌ ошибка отправки';
+                statusMessage.className = 'status error';
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '⬆ отправить';
+            }
         }
 
         copyLinkBtn.addEventListener('click', async () => {
