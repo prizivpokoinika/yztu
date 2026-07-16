@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FREEPASTE</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a0e14;
+            background: radial-gradient(ellipse at center, #141c28 0%, #080c12 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 720px;
+            width: 100%;
+        }
+        .card {
+            background: rgba(18, 28, 40, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 32px;
+            padding: 2.4rem 2.6rem;
+            border: 1px solid rgba(100, 180, 255, 0.08);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(60, 140, 255, 0.05);
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+        .header h1 {
+            color: #e8f0fa;
+            font-weight: 600;
+            font-size: 2rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #4c9eff, #8fcbff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #0f8a4a;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 15px rgba(15, 138, 74, 0.3);
+        }
+        .textarea-wrap {
+            position: relative;
+            margin-bottom: 1.2rem;
+        }
+        textarea {
+            width: 100%;
+            padding: 1.2rem 1.4rem;
+            background: rgba(8, 18, 32, 0.7);
+            border: 1px solid #1a3a5a;
+            border-radius: 24px;
+            color: #dce8f5;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 200px;
+            outline: none;
+            transition: 0.2s;
+            line-height: 1.7;
+        }
+        textarea::placeholder {
+            color: rgba(220, 232, 245, 0.25);
+            font-weight: 300;
+        }
+        textarea:focus {
+            border-color: #4c9eff;
+            box-shadow: 0 0 0 3px rgba(60, 150, 255, 0.1);
+            background: rgba(10, 22, 40, 0.8);
+        }
+        .counter {
+            position: absolute;
+            bottom: 16px;
+            right: 20px;
+            color: rgba(74, 106, 138, 0.5);
+            font-size: 0.75rem;
+            background: rgba(8, 18, 32, 0.5);
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+            border: 1px solid rgba(26, 58, 90, 0.3);
+        }
+        .options {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin: 0.8rem 0 1.2rem 0;
+            align-items: center;
+        }
+        .options label {
+            color: rgba(138, 180, 224, 0.7);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .options select {
+            background: rgba(8, 18, 32, 0.7);
+            border: 1px solid rgba(26, 58, 90, 0.5);
+            border-radius: 40px;
+            padding: 0.3rem 1.2rem;
+            color: #dce8f5;
+            outline: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            min-width: 100px;
+        }
+        .options select:focus {
+            border-color: #4c9eff;
+        }
+        .options select option {
+            background: #141c28;
+        }
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin: 1.4rem 0 1.2rem 0;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 0.7rem 2.2rem;
+            border: none;
+            border-radius: 60px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1 1 auto;
+            justify-content: center;
+            background: rgba(30, 60, 100, 0.3);
+            color: #b0cef0;
+            border: 1px solid rgba(26, 58, 90, 0.5);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #1a6bc4, #4c9eff);
+            border: 1px solid #3a8aff;
+            color: white;
+            box-shadow: 0 8px 20px rgba(26, 107, 196, 0.25);
+        }
+        .btn-primary:hover {
+            transform: scale(0.97);
+            box-shadow: 0 4px 16px rgba(26, 107, 196, 0.5);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-outline:hover {
+            background: rgba(40, 80, 140, 0.3);
+            border-color: #4c9eff;
+        }
+        .result-box {
+            background: rgba(8, 18, 32, 0.6);
+            border-radius: 24px;
+            padding: 1.2rem 1.6rem;
+            margin-top: 1.5rem;
+            border-left: 4px solid #4c9eff;
+            border: 1px solid rgba(26, 58, 90, 0.5);
+            display: none;
+            transition: 0.2s;
+        }
+        .result-box.visible {
+            display: block;
+        }
+        .result-box .label {
+            color: rgba(138, 180, 224, 0.7);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+        .result-box .link-wrap {
+            background: rgba(0, 10, 25, 0.5);
+            padding: 0.7rem 1.2rem;
+            border-radius: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border: 1px solid rgba(26, 58, 90, 0.5);
+            flex-wrap: wrap;
+        }
+        .result-box .link-wrap a {
+            color: #7bbaff;
+            text-decoration: none;
+            font-weight: 400;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: break-all;
+            font-size: 0.95rem;
+        }
+        .result-box .link-wrap a:hover {
+            color: #a8d0ff;
+            text-decoration: underline;
+        }
+        .copy-btn {
+            background: none;
+            border: none;
+            color: #6aaeff;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 0 4px;
+            transition: 0.1s;
+            flex-shrink: 0;
+        }
+        .copy-btn:hover {
+            color: #a8d0ff;
+            transform: scale(1.1);
+        }
+        .status {
+            margin-top: 12px;
+            font-size: 0.9rem;
+            color: rgba(143, 203, 255, 0.8);
+        }
+        .status.error {
+            color: #f0a0a0;
+        }
+        .status.success {
+            color: rgba(143, 203, 255, 0.8);
+        }
+        .footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: rgba(58, 90, 122, 0.4);
+            font-size: 0.7rem;
+            border-top: 1px solid rgba(26, 42, 58, 0.3);
+            padding-top: 1.5rem;
+            letter-spacing: 0.3px;
+        }
+        .footer span {
+            color: #4c9eff;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal {
+            background: rgba(18, 28, 40, 0.95);
+            border-radius: 32px;
+            padding: 2.5rem;
+            max-width: 450px;
+            width: 90%;
+            border: 1px solid rgba(100, 180, 255, 0.1);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+        }
+        .modal h2 {
+            color: #e8f0fa;
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+        .modal p {
+            color: rgba(138, 180, 224, 0.7);
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .modal .modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .modal .modal-btn {
+            padding: 0.9rem;
+            border: none;
+            border-radius: 60px;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .modal .modal-btn.watermark {
+            background: linear-gradient(135deg, #1a6bc4, #4c9eff);
+            color: white;
+            border: 1px solid #3a8aff;
+        }
+        .modal .modal-btn.watermark:hover {
+            transform: scale(0.97);
+        }
+        .modal .modal-btn.nowatermark {
+            background: rgba(30, 60, 100, 0.3);
+            color: #b0cef0;
+            border: 1px solid rgba(26, 58, 90, 0.5);
+        }
+        .modal .modal-btn.nowatermark:hover {
+            background: rgba(40, 80, 140, 0.3);
+            border-color: #4c9eff;
+        }
+        .modal .modal-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .modal .modal-close {
+            margin-top: 12px;
+            background: transparent;
+            border: none;
+            color: rgba(138, 180, 224, 0.4);
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-align: center;
+            width: 100%;
+            padding: 0.5rem;
+        }
+        .modal .modal-close:hover {
+            color: rgba(138, 180, 224, 0.7);
+        }
+        .modal .watermark-info {
+            font-size: 0.75rem;
+            color: rgba(106, 138, 170, 0.5);
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        .code-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+        .code-modal-overlay.active {
+            display: flex;
+        }
+        .code-modal {
+            background: rgba(18, 28, 40, 0.95);
+            border-radius: 32px;
+            padding: 2.5rem;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid rgba(100, 180, 255, 0.1);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+        }
+        .code-modal h2 {
+            color: #e8f0fa;
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        .code-modal p {
+            color: rgba(138, 180, 224, 0.6);
+            font-size: 0.85rem;
+            text-align: center;
+            margin-bottom: 1.2rem;
+        }
+        .code-modal .code-input-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .code-modal .code-input-group input {
+            background: rgba(8, 18, 32, 0.7);
+            border: 1px solid rgba(26, 58, 90, 0.5);
+            border-radius: 40px;
+            padding: 0.6rem 1.2rem;
+            color: #dce8f5;
+            outline: none;
+            font-size: 1rem;
+            width: 150px;
+            text-align: center;
+            letter-spacing: 4px;
+        }
+        .code-modal .code-input-group input:focus {
+            border-color: #4c9eff;
+        }
+        .code-modal .code-input-group button {
+            background: rgba(26, 107, 196, 0.3);
+            border: 1px solid #1a3a5a;
+            border-radius: 40px;
+            padding: 0.6rem 1.5rem;
+            color: #8fcbff;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.15s;
+        }
+        .code-modal .code-input-group button:hover {
+            background: rgba(26, 107, 196, 0.5);
+        }
+        .code-modal .code-status {
+            text-align: center;
+            margin-top: 0.8rem;
+            font-size: 0.8rem;
+            color: rgba(143, 203, 255, 0.6);
+        }
+        .code-modal .code-close {
+            margin-top: 12px;
+            background: transparent;
+            border: none;
+            color: rgba(138, 180, 224, 0.4);
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-align: center;
+            width: 100%;
+            padding: 0.5rem;
+        }
+        .code-modal .code-close:hover {
+            color: rgba(138, 180, 224, 0.7);
+        }
+
+        iframe {
+            display: none;
+        }
+        @media (max-width: 550px) {
+            .card { padding: 1.5rem; }
+            .actions .btn { flex: 1 1 100%; }
+            .options { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <div class="header">
+            <h1>FREEPASTE</h1>
+            <span class="status-dot"></span>
+        </div>
+
+        <div class="textarea-wrap">
+            <textarea id="textInput" placeholder="напиши текст"></textarea>
+            <span class="counter" id="charCounter">0</span>
+        </div>
+
+        <div class="options">
+            <label>
+                ⏱ срок:
+                <select id="expirySelect">
+                    <option value="10M">10 мин</option>
+                    <option value="1H">1 час</option>
+                    <option value="1D" selected>1 день</option>
+                    <option value="1W">1 неделя</option>
+                    <option value="2W">2 недели</option>
+                    <option value="1M">1 месяц</option>
+                    <option value="6M">6 мес</option>
+                    <option value="1Y">1 год</option>
+                    <option value="N">навсегда</option>
+                </select>
+            </label>
+            <label>
+                🔒 доступ:
+                <select id="privacySelect">
+                    <option value="public">всем</option>
+                    <option value="unlisted">по ссылке</option>
+                    <option value="private">только я</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" id="uploadBtn">
+                ⬆ отправить
+            </button>
+            <button class="btn btn-outline" id="resetBtn">
+                ↺ очистить
+            </button>
+        </div>
+
+        <div class="result-box" id="resultBox">
+            <div class="label">🔗 ссылка</div>
+            <div class="link-wrap">
+                <a id="downloadLink" href="#" target="_blank">https://pastebin.com/...</a>
+                <button class="copy-btn" id="copyLinkBtn" title="Копировать">📋</button>
+            </div>
+            <div id="statusMessage" class="status"></div>
+        </div>
+
+        <div class="footer">
+            <span>FREEPASTE</span> · pastebin.com
+        </div>
+    </div>
+</div>
+
+<!-- Скрытый iframe для отправки -->
+<iframe id="pasteFrame" name="pasteFrame" style="display:none;"></iframe>
+
+<!-- Модальное окно выбора -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <h2>📤 отправить текст</h2>
+        <p>выберите способ отправки</p>
+        <div class="modal-buttons">
+            <button class="modal-btn watermark" id="modalWatermark">
+                📄 с водяным знаком
+                <span style="font-size:0.7rem;opacity:0.7;">(бесплатно)</span>
+            </button>
+            <button class="modal-btn nowatermark" id="modalNoWatermark">
+                🧼 без водяного знака
+                <span style="font-size:0.7rem;opacity:0.7;">(подтвердите email)</span>
+            </button>
+        </div>
+        <button class="modal-close" id="modalClose">отмена</button>
+        <div class="watermark-info" id="watermarkInfo">✉️ нужен email для подтверждения</div>
+    </div>
+</div>
+
+<!-- Модальное окно для ввода email -->
+<div class="code-modal-overlay" id="emailModalOverlay">
+    <div class="code-modal">
+        <h2>✉️ подтверждение email</h2>
+        <p>введите email для получения кода</p>
+        <div class="code-input-group" style="flex-direction:column; align-items:stretch;">
+            <input type="email" id="emailInput" placeholder="ваш email" style="width:100%;">
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                <button id="emailSendBtn">отправить код</button>
+                <button id="emailCloseBtn" style="background:transparent;border:1px solid rgba(26,58,90,0.3);color:rgba(138,180,224,0.4);">отмена</button>
+            </div>
+        </div>
+        <div class="code-status" id="emailStatus">введите email</div>
+    </div>
+</div>
+
+<!-- Модальное окно для ввода кода -->
+<div class="code-modal-overlay" id="codeModalOverlay">
+    <div class="code-modal">
+        <h2>🔑 введите код</h2>
+        <p>код отправлен на ваш email</p>
+        <div class="code-input-group">
+            <input type="text" id="codeInput" placeholder="код" maxlength="6" autofocus>
+            <button id="codeConfirmBtn">✅ подтвердить</button>
+        </div>
+        <div class="code-status" id="codeStatus">ожидание кода...</div>
+        <button class="code-close" id="codeClose">отмена</button>
+    </div>
+</div>
+
+<script>
+    (function() {
+        const textInput = document.getElementById('textInput');
+        const charCounter = document.getElementById('charCounter');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const resultBox = document.getElementById('resultBox');
+        const downloadLink = document.getElementById('downloadLink');
+        const copyLinkBtn = document.getElementById('copyLinkBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const expirySelect = document.getElementById('expirySelect');
+        const privacySelect = document.getElementById('privacySelect');
+        const pasteFrame = document.getElementById('pasteFrame');
+
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalWatermark = document.getElementById('modalWatermark');
+        const modalNoWatermark = document.getElementById('modalNoWatermark');
+        const modalClose = document.getElementById('modalClose');
+        const watermarkInfo = document.getElementById('watermarkInfo');
+
+        const emailModalOverlay = document.getElementById('emailModalOverlay');
+        const emailInput = document.getElementById('emailInput');
+        const emailSendBtn = document.getElementById('emailSendBtn');
+        const emailCloseBtn = document.getElementById('emailCloseBtn');
+        const emailStatus = document.getElementById('emailStatus');
+
+        const codeModalOverlay = document.getElementById('codeModalOverlay');
+        const codeInput = document.getElementById('codeInput');
+        const codeConfirmBtn = document.getElementById('codeConfirmBtn');
+        const codeStatus = document.getElementById('codeStatus');
+        const codeClose = document.getElementById('codeClose');
+
+        let isVerified = false;
+        let verifiedEmail = '';
+        let currentCode = '';
+        let pendingPasteData = null;
+
+        const API_DEV_KEY = '_jEwLDvMECfdFuqxxBZ6WnDPujN7M5j8';
+
+        function generateCode() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        function sendCodeViaMailto(email) {
+            currentCode = generateCode();
+            const subject = 'Код подтверждения FREEPASTE';
+            const body = `Ваш код подтверждения: ${currentCode}\n\nВведите его на сайте.\n\nЭто письмо отправлено автоматически.`;
+            const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.open(mailtoLink, '_blank');
+            
+            emailStatus.textContent = '✉️ письмо отправлено, проверьте почту';
+            emailStatus.style.color = '#0f8a4a';
+            return true;
+        }
+
+        function openEmailModal() {
+            emailModalOverlay.classList.add('active');
+            emailInput.value = '';
+            emailStatus.textContent = 'введите email';
+            emailStatus.style.color = 'rgba(143, 203, 255, 0.6)';
+            emailInput.focus();
+        }
+
+        function closeEmailModal() {
+            emailModalOverlay.classList.remove('active');
+        }
+
+        function openCodeModal() {
+            codeModalOverlay.classList.add('active');
+            codeInput.value = '';
+            codeStatus.textContent = 'ожидание кода...';
+            codeStatus.style.color = 'rgba(143, 203, 255, 0.6)';
+            codeInput.focus();
+        }
+
+        function closeCodeModal() {
+            codeModalOverlay.classList.remove('active');
+        }
+
+        emailSendBtn.addEventListener('click', () => {
+            const email = emailInput.value.trim();
+            if (!email || !email.includes('@')) {
+                emailStatus.textContent = '❌ введите корректный email';
+                emailStatus.style.color = '#f0a0a0';
+                return;
+            }
+
+            sendCodeViaMailto(email);
+            verifiedEmail = email;
+            closeEmailModal();
+            openCodeModal();
+        });
+
+        emailInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                emailSendBtn.click();
+            }
+        });
+
+        emailCloseBtn.addEventListener('click', closeEmailModal);
+        emailModalOverlay.addEventListener('click', (e) => {
+            if (e.target === emailModalOverlay) closeEmailModal();
+        });
+
+        codeConfirmBtn.addEventListener('click', () => {
+            const enteredCode = codeInput.value.trim();
+            if (!enteredCode) {
+                codeStatus.textContent = '❌ введите код';
+                codeStatus.style.color = '#f0a0a0';
+                return;
+            }
+            if (enteredCode === currentCode) {
+                isVerified = true;
+                codeStatus.textContent = '✅ email подтверждён!';
+                codeStatus.style.color = '#0f8a4a';
+                watermarkInfo.textContent = '✅ email подтверждён · доступно';
+                watermarkInfo.style.color = '#0f8a4a';
+                modalNoWatermark.disabled = false;
+                modalNoWatermark.style.opacity = '1';
+                setTimeout(() => {
+                    closeCodeModal();
+                    if (pendingPasteData) {
+                        sendPasteViaIframe(pendingPasteData.text, pendingPasteData.withWatermark);
+                        pendingPasteData = null;
+                    }
+                }, 800);
+                statusMessage.textContent = '✅ email подтверждён!';
+                statusMessage.className = 'status success';
+                resultBox.classList.add('visible');
+            } else {
+                codeStatus.textContent = '❌ неверный код, попробуйте ещё раз';
+                codeStatus.style.color = '#f0a0a0';
+                codeInput.value = '';
+                codeInput.focus();
+            }
+        });
+
+        codeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                codeConfirmBtn.click();
+            }
+        });
+
+        codeClose.addEventListener('click', closeCodeModal);
+        codeModalOverlay.addEventListener('click', (e) => {
+            if (e.target === codeModalOverlay) closeCodeModal();
+        });
+
+        function addWatermark(text) {
+            const watermark = '\n\n---\n📄 отправлено через FREEPASTE';
+            return text + watermark;
+        }
+
+        textInput.addEventListener('input', () => {
+            charCounter.textContent = textInput.value.length;
+        });
+
+        resetBtn.addEventListener('click', () => {
+            textInput.value = '';
+            charCounter.textContent = '0';
+            resultBox.classList.remove('visible');
+            statusMessage.textContent = '';
+            statusMessage.className = 'status';
+        });
+
+        uploadBtn.addEventListener('click', () => {
+            const text = textInput.value.trim();
+            if (!text) {
+                statusMessage.textContent = '⚠️ напиши текст';
+                statusMessage.className = 'status error';
+                resultBox.classList.add('visible');
+                return;
+            }
+            modalOverlay.classList.add('active');
+        });
+
+        modalClose.addEventListener('click', () => {
+            modalOverlay.classList.remove('active');
+        });
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                modalOverlay.classList.remove('active');
+            }
+        });
+
+        modalWatermark.addEventListener('click', () => {
+            modalOverlay.classList.remove('active');
+            const text = textInput.value.trim();
+            if (text) {
+                sendPasteViaIframe(text, true);
+            }
+        });
+
+        modalNoWatermark.addEventListener('click', () => {
+            modalOverlay.classList.remove('active');
+            const text = textInput.value.trim();
+            if (!text) return;
+            
+            if (isVerified) {
+                sendPasteViaIframe(text, false);
+                return;
+            }
+            
+            pendingPasteData = { text: text, withWatermark: false };
+            openEmailModal();
+        });
+
+        // Отправка через iframe (без CORS)
+        function sendPasteViaIframe(text, withWatermark) {
+            if (withWatermark) {
+                text = addWatermark(text);
+            }
+
+            const textSize = new Blob([text]).size;
+            if (textSize > 100 * 1024) {
+                statusMessage.textContent = '❌ слишком много (макс. 100 KB)';
+                statusMessage.className = 'status error';
+                resultBox.classList.add('visible');
+                return;
+            }
+
+            const expiry = expirySelect.value;
+            const privacy = privacySelect.value;
+
+            // Создаём форму и отправляем через iframe
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'https://pastebin.com/api/api_post.php';
+            form.target = 'pasteFrame';
+            form.enctype = 'multipart/form-data';
+
+            const fields = {
+                'api_dev_key': API_DEV_KEY,
+                'api_option': 'paste',
+                'api_paste_code': text,
+                'api_paste_name': 'FREEPASTE_' + Date.now(),
+                'api_paste_format': 'text',
+                'api_paste_private': privacy === 'public' ? '0' : privacy === 'unlisted' ? '1' : '2',
+                'api_paste_expire_date': expiry
+            };
+
+            for (const [key, value] of Object.entries(fields)) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                form.appendChild(input);
+            }
+
+            document.body.appendChild(form);
+
+            statusMessage.textContent = '⏳ отправка...';
+            statusMessage.className = 'status';
+            resultBox.classList.add('visible');
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '⟳ отправка...';
+
+            // Обработчик ответа от iframe
+            const checkFrame = setInterval(() => {
+                try {
+                    const frameDoc = pasteFrame.contentDocument || pasteFrame.contentWindow.document;
+                    const bodyText = frameDoc.body ? frameDoc.body.textContent : '';
+                    
+                    if (bodyText && bodyText.startsWith('https://pastebin.com/')) {
+                        clearInterval(checkFrame);
+                        const pasteUrl = bodyText.trim();
+                        
+                        downloadLink.href = pasteUrl;
+                        downloadLink.textContent = pasteUrl.length > 60 ? pasteUrl.substring(0, 60) + '…' : pasteUrl;
+                        downloadLink.title = pasteUrl;
+
+                        const expiryLabels = {
+                            '10M': '10 минут',
+                            '1H': '1 час',
+                            '1D': '1 день',
+                            '1W': '1 неделю',
+                            '2W': '2 недели',
+                            '1M': '1 месяц',
+                            '6M': '6 месяцев',
+                            '1Y': '1 год',
+                            'N': 'навсегда'
+                        };
+                        const watermarkStatus = withWatermark ? 'с водяным знаком' : 'без водяного знака ✅';
+                        statusMessage.textContent = `✅ готово! (${expiryLabels[expiry] || expiry}, ${watermarkStatus})`;
+                        statusMessage.className = 'status success';
+                        resultBox.classList.add('visible');
+                        
+                        uploadBtn.disabled = false;
+                        uploadBtn.innerHTML = '⬆ отправить';
+                        
+                        // Очищаем iframe
+                        setTimeout(() => {
+                            try {
+                                const doc = pasteFrame.contentDocument || pasteFrame.contentWindow.document;
+                                doc.body.innerHTML = '';
+                            } catch(e) {}
+                        }, 1000);
+                    } else if (bodyText && bodyText.length > 0 && !bodyText.startsWith('https://pastebin.com/')) {
+                        // Ошибка от Pastebin
+                        clearInterval(checkFrame);
+                        statusMessage.textContent = `❌ ошибка: ${bodyText.substring(0, 100)}`;
+                        statusMessage.className = 'status error';
+                        uploadBtn.disabled = false;
+                        uploadBtn.innerHTML = '⬆ отправить';
+                    }
+                } catch(e) {
+                    // iframe ещё не загрузился
+                }
+            }, 500);
+
+            // Таймаут на случай зависания
+            setTimeout(() => {
+                clearInterval(checkFrame);
+                if (uploadBtn.disabled) {
+                    statusMessage.textContent = '❌ таймаут отправки, попробуйте ещё раз';
+                    statusMessage.className = 'status error';
+                    uploadBtn.disabled = false;
+                    uploadBtn.innerHTML = '⬆ отправить';
+                }
+            }, 30000);
+
+            form.submit();
+            setTimeout(() => {
+                if (form.parentNode) form.remove();
+            }, 1000);
+        }
+
+        copyLinkBtn.addEventListener('click', async () => {
+            const url = downloadLink.href;
+            if (!url || url === '#') {
+                statusMessage.textContent = '⚠️ нет ссылки';
+                statusMessage.className = 'status error';
+                return;
+            }
+            try {
+                await navigator.clipboard.writeText(url);
+                statusMessage.textContent = '📋 скопировано!';
+                statusMessage.className = 'status success';
+            } catch (err) {
+                const textArea = document.createElement('textarea');
+                textArea.value = url;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                statusMessage.textContent = '📋 скопировано!';
+                statusMessage.className = 'status success';
+            }
+        });
+
+        charCounter.textContent = '0';
+        resultBox.classList.remove('visible');
+    })();
+</script>
+</body>
+</html>
