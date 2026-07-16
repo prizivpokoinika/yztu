@@ -595,7 +595,9 @@
         let currentCode = '';
         let pendingPasteData = null;
 
+        // ИСПОЛЬЗУЕМ HTTPS ДЛЯ PASTEBIN API
         const API_DEV_KEY = '_jEwLDvMECfdFuqxxBZ6WnDPujN7M5j8';
+        const API_URL = 'https://pastebin.com/api/api_post.php';
 
         function generateCode() {
             return Math.floor(100000 + Math.random() * 900000).toString();
@@ -767,7 +769,7 @@
             openEmailModal();
         });
 
-        // ОСНОВНАЯ ФУНКЦИЯ ОТПРАВКИ - работает локально!
+        // ОСНОВНАЯ ФУНКЦИЯ ОТПРАВКИ - РАБОТАЕТ И НА HTTPS!
         function sendPaste(text, withWatermark) {
             if (withWatermark) {
                 text = addWatermark(text);
@@ -790,10 +792,10 @@
             iframe.name = 'pasteFrame_' + Date.now();
             document.body.appendChild(iframe);
 
-            // СОЗДАЁМ ФОРМУ
+            // СОЗДАЁМ ФОРМУ С HTTPS URL
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = 'https://pastebin.com/api/api_post.php';
+            form.action = API_URL; // https://pastebin.com/api/api_post.php
             form.target = iframe.name;
             form.enctype = 'multipart/form-data';
 
@@ -899,14 +901,13 @@
                     // iframe ещё не загрузился - игнорируем
                 }
 
-                // ТАЙМАУТ - показываем сообщение, но не блокируем
+                // ТАЙМАУТ
                 if (attempts > 60) { // ~18 секунд
                     if (!completed) {
                         completed = true;
                         clearInterval(checkInterval);
                         clearTimeout(timeoutId);
                         
-                        // Не показываем ошибку, а предлагаем проверить
                         statusMessage.textContent = '⏳ запрос отправлен, проверьте pastebin.com';
                         statusMessage.className = 'status';
                         uploadBtn.disabled = false;
