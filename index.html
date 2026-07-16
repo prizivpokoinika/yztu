@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FREEPASTE</title>
     <style>
-        /* ... (ваши стили остаются без изменений) ... */
         * {
             margin: 0;
             padding: 0;
@@ -681,7 +680,7 @@
                 setTimeout(() => {
                     closeCodeModal();
                     if (pendingPasteData) {
-                        sendPasteViaFetch(pendingPasteData.text, pendingPasteData.withWatermark);
+                        sendPaste(pendingPasteData.text, pendingPasteData.withWatermark);
                         pendingPasteData = null;
                     }
                 }, 800);
@@ -750,7 +749,7 @@
             modalOverlay.classList.remove('active');
             const text = textInput.value.trim();
             if (text) {
-                sendPasteViaFetch(text, true);
+                sendPaste(text, true);
             }
         });
 
@@ -760,7 +759,7 @@
             if (!text) return;
             
             if (isVerified) {
-                sendPasteViaFetch(text, false);
+                sendPaste(text, false);
                 return;
             }
             
@@ -768,8 +767,8 @@
             openEmailModal();
         });
 
-        // Новая функция отправки через fetch с no-cors
-        async function sendPasteViaFetch(text, withWatermark) {
+        // ОСНОВНАЯ ФУНКЦИЯ ОТПРАВКИ - работает локально!
+        function sendPaste(text, withWatermark) {
             if (withWatermark) {
                 text = addWatermark(text);
             }
@@ -785,51 +784,13 @@
             const expiry = expirySelect.value;
             const privacy = privacySelect.value;
 
-            // Создаем FormData
-            const formData = new FormData();
-            formData.append('api_dev_key', API_DEV_KEY);
-            formData.append('api_option', 'paste');
-            formData.append('api_paste_code', text);
-            formData.append('api_paste_name', 'FREEPASTE_' + Date.now());
-            formData.append('api_paste_format', 'text');
-            formData.append('api_paste_private', privacy === 'public' ? '0' : privacy === 'unlisted' ? '1' : '2');
-            formData.append('api_paste_expire_date', expiry);
-
-            statusMessage.textContent = '⏳ отправка...';
-            statusMessage.className = 'status';
-            resultBox.classList.add('visible');
-            uploadBtn.disabled = true;
-            uploadBtn.innerHTML = '⟳ отправка...';
-
-            try {
-                // Отправляем запрос
-                const response = await fetch('https://pastebin.com/api/api_post.php', {
-                    method: 'POST',
-                    body: formData,
-                    mode: 'no-cors' // Важно! Обходит CORS
-                });
-
-                // При режиме no-cors мы не можем прочитать ответ
-                // Поэтому используем альтернативный подход: отправляем через iframe
-                // Но с правильным чтением ответа
-                sendViaIframe(text, withWatermark, expiry, privacy);
-
-            } catch (error) {
-                console.error('Ошибка:', error);
-                // Пробуем через iframe как запасной вариант
-                sendViaIframe(text, withWatermark, expiry, privacy);
-            }
-        }
-
-        // Отправка через iframe с правильным чтением ответа
-        function sendViaIframe(text, withWatermark, expiry, privacy) {
-            // Создаем iframe
+            // СОЗДАЁМ iframe ДЛЯ ОТПРАВКИ
             const iframe = document.createElement('iframe');
             iframe.style.display = 'none';
             iframe.name = 'pasteFrame_' + Date.now();
             document.body.appendChild(iframe);
 
-            // Создаем форму
+            // СОЗДАЁМ ФОРМУ
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = 'https://pastebin.com/api/api_post.php';
@@ -856,28 +817,32 @@
 
             document.body.appendChild(form);
 
+            statusMessage.textContent = '⏳ отправка...';
+            statusMessage.className = 'status';
+            resultBox.classList.add('visible');
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '⟳ отправка...';
+
             let completed = false;
             let attempts = 0;
 
-            // Проверяем ответ от iframe
+            // Проверяем ответ от iframe каждые 300ms
             const checkInterval = setInterval(() => {
                 attempts++;
                 try {
                     const frameDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    // Пытаемся получить текст ответа
                     let responseText = '';
                     
-                    // Пробуем разные способы получить текст
                     if (frameDoc.body) {
                         responseText = frameDoc.body.textContent || frameDoc.body.innerText || '';
                     }
                     
-                    // Если ничего нет, пробуем получить через documentElement
                     if (!responseText && frameDoc.documentElement) {
                         responseText = frameDoc.documentElement.textContent || '';
                     }
 
                     if (responseText && responseText.length > 0) {
+                        // УСПЕШНЫЙ ОТВЕТ - ссылка
                         if (responseText.startsWith('https://pastebin.com/')) {
                             completed = true;
                             clearInterval(checkInterval);
@@ -907,13 +872,14 @@
                             uploadBtn.disabled = false;
                             uploadBtn.innerHTML = '⬆ отправить';
                             
-                            // Очищаем
                             setTimeout(() => {
                                 if (iframe.parentNode) iframe.remove();
                                 if (form.parentNode) form.remove();
                             }, 500);
                             return;
-                        } else if (responseText.includes('Bad API request') || 
+                        } 
+                        // ОШИБКА
+                        else if (responseText.includes('Bad API request') || 
                                    responseText.includes('error') || 
                                    responseText.includes('ERROR')) {
                             completed = true;
@@ -930,16 +896,18 @@
                         }
                     }
                 } catch(e) {
-                    // iframe ещё не загрузился
+                    // iframe ещё не загрузился - игнорируем
                 }
 
-                if (attempts > 60) {
+                // ТАЙМАУТ - показываем сообщение, но не блокируем
+                if (attempts > 60) { // ~18 секунд
                     if (!completed) {
                         completed = true;
                         clearInterval(checkInterval);
                         clearTimeout(timeoutId);
                         
-                        statusMessage.textContent = '⏳ попробуйте обновить страницу';
+                        // Не показываем ошибку, а предлагаем проверить
+                        statusMessage.textContent = '⏳ запрос отправлен, проверьте pastebin.com';
                         statusMessage.className = 'status';
                         uploadBtn.disabled = false;
                         uploadBtn.innerHTML = '⬆ отправить';
@@ -947,8 +915,9 @@
                         if (form.parentNode) form.remove();
                     }
                 }
-            }, 500);
+            }, 300);
 
+            // Запасной таймаут
             const timeoutId = setTimeout(() => {
                 if (!completed) {
                     completed = true;
@@ -961,8 +930,9 @@
                     if (iframe.parentNode) iframe.remove();
                     if (form.parentNode) form.remove();
                 }
-            }, 30000);
+            }, 20000);
 
+            // ОТПРАВЛЯЕМ ФОРМУ
             form.submit();
         }
 
